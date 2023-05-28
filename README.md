@@ -1,87 +1,77 @@
-# GitHub Migration Analyzer
+# Trust Wallet Assets Info
 
-The Migration Analyzer is a command-line (cli) utility tool that helps customers migrating repositories to GitHub plan for and size their migration in terms. The tool currently supports migrations from Azure DevOps and GitHub Cloud as a source to GitHub Cloud as a destination. 
+![Check](https://github.com/trustwallet/assets/workflows/Check/badge.svg)
 
-The tool is for use alongside GitHub's Enterprise Importer (GEI). It is a self-service tool for customers to gauge how much data they will need to migrate without having to do a dry run migration with GEI itself. 
-## Environment
+## Overview
 
-The tool runs in a [Node.js](https://nodejs.org/) runtime environment.  It requires version 14 or greater. 
-## Installation
+Trust Wallet token repository is a comprehensive, up-to-date collection of information about several thousands (!) of crypto tokens.
 
-Use the command ```cd <pathname of desired parent directory> && git clone https://github.com/github/gh-migration-analyzer.git``` to change to the desired parent directory and install the tool. 
+[Trust Wallet](https://trustwallet.com) uses token logos from this source, alongside a number of other projects.
 
-## Personal Access Tokens
+The repository contains token info from several blockchains, info on dApps, staking validators, etc.
+For every token a logo and optional additional information is available (such data is not available on-chain).
 
-You will need to generate a Personal Access Token (PAT) within your source (Azure DevOps or GitHub). The following scopes are required:
+Such a large collection can be maintained only through a community effort, so _feel free to add your token_.
 
-* For Azure DevOps: `read` for `Code`.
-* For GitHub Cloud: `repo`.  
+<center><img src='https://trustwallet.com/assets/images/media/assets/horizontal_blue.png' height="200"></center>
 
-## Dependencies
+## How to add token
 
-Use the command ```cd <pathname of migration analyzer directory> && npm install``` to change to your ```migration-analyzer``` directory.  This will install the following project dependencies:
+Please note that __brand new tokens are not accepted__,
+the projects have to be sound, with information available, and __non-minimal circulation__
+(for limit details see <https://developer.trustwallet.com/assets/requirements>).
 
-- [commander](https://www.npmjs.com/package/commander)
-- [csv-writer](https://www.npmjs.com/package/csv-writer)
-- [node-fetch](https://www.npmjs.com/package/node-fetch)
-- [ora](https://www.npmjs.com/package/ora)
-- [p-limit](https://www.npmjs.com/package/p-limit)
-- [prompts](https://www.npmjs.com/package/prompts)
+### Assets App
 
-## Usage
+The [Assets web app](https://assets.trustwallet.com) can be used for most new token additions (Github account is needed).
 
-Usage information about the tool is available with the help command. 
-````
-node src/index.js help
-````
+### Quick starter
 
-Fetch Azure DevOps organization metrics and write to CSV. 
-````
-node src/index.js ADO-org [options]
+Details of the repository structure and contribution guidelines are listed on the
+[Developers site](https://developer.trustwallet.com/assets/new-asset).
+Here is a quick starter summary for the most common use case.
 
-Options:
-  -p, --project <project name> Azure DevOps project name (can pass either project or organization, not necessary to pass both)
-  -o, --organization <organization> Azure DevOps organization name
-  -t, --token <PAT> Azure DevOps personal access token
-  -h, --help Help command for Azure DevOps options
-````
 
-Fetch GitHub Organization Metrics and write to CSV
-````
-node src/index.js GH-org [options]
+## Documentation
 
-Options:
-  -o, --organization <organization> GitHub organization name (required)
-  -t, --token <PAT> GitHub personal access token
-  -s, --server <GRAPHQL URL> GraphQL endpoint for a GHES instance. 
-  -a, --allow-untrusted-ssl-certificates Allow connections to a GitHub API endpoint that presents a SSL certificate that isn't issued by a trusted CA
-  -h, --help Help command for GitHub options
+For details, see the [Developers site](https://developer.trustwallet.com):
 
-````
+- [Contribution guidelines](https://developer.trustwallet.com/assets/repository_details)
 
-You can alternatively export your PAT as environment variable if you do not want to pass it in with the command. 
+- [FAQ](https://developer.trustwallet.com/assets/faq)
 
-````export GH_PAT=<PAT>```` or ````export ADO_PAT=<PAT>````
+## Scripts
 
-The tool will export CSV files a new directory within the project's root directory. If GitHub is the source, the tool will export two CSV files: one containing a list of repositories with the number of Pull Requests, Issues, Projects, and whether wikis are enabled. The other will contain organization-level rollup metrics (number of repositories, pull requests, issues, and projects). If Azure DevOps is the source, the CSV will list each project, and the repositories and pull requests in each. 
+There are several scripts available for maintainers:
 
-## Usage for GitHub Enterprise Server (GHES)
-The tool can be run against a GHES 3.4 or newer to gather migration statistics. Clone this repository onto a computer that has access to your GHES instance's web portal. Ensure that you've run the installation steps described earlier in this readme. You'll need to supply the GraphQL endpoint for your GHES instance in the `-s` option. You can learn how to get this endpoint in the [forming calls with GraphQL](https://docs.github.com/en/enterprise-server@3.4/graphql/guides/forming-calls-with-graphql#the-graphql-endpoint) documentation GitHub provides. The final command will be structured like the below example. 
+- `make check` -- Execute validation checks; also used in continuous integration.
+- `make fix` -- Perform automatic fixes where possible
+- `make update-auto` -- Run automatic updates from external sources, executed regularly (GitHub action)
+- `make add-token asset_id=c60_t0x4Fabb145d64652a948d72533023f6E7A623C7C53` -- Create `info.json` file as asset template.
+- `make add-tokenlist asset_id=c60_t0x4Fabb145d64652a948d72533023f6E7A623C7C53` -- Adds a token to tokenlist.json.
+- `make add-tokenlist-extended asset_id=c60_t0x4Fabb145d64652a948d72533023f6E7A623C7C53` -- Adds a token to tokenlist-extended.json.
 
-```
-node src/index.js GH-org -o <ORG Name> -s <GHES GraphQL Endpoint>
-```
+## On Checks
 
-## Project Roadmap
+This repo contains a set of scripts for verification of all the information. Implemented as Golang scripts, available through `make check`, and executed in CI build; checks the whole repo.
+There are similar check logic implemented:
 
-The current areas of focus for the project are:
-- [ ] Achieving complete code coverage with unit tests
-- [ ] Allowing the command ```migration-analyzer``` to be run instead of ```node src/index.js```
-- [ ] Adding error handling for when an ADO repository contains a large binary that exceeds the size limit
+- in assets-management app; for checking changed token files in PRs, or when creating a PR.  Checks diffs, can be run from browser environment.
+- in merge-fee-bot, which runs as a GitHub app shows result in PR comment. Executes in a non-browser environment.
 
-In the future, the following areas of focus will be added:
-- [ ] Create a new way to distribute and run the tool, such as a Docker image
+## Trading pair maintenance
 
-## Contributions
+Info on supported trading pairs are stored in `tokenlist.json` files.
+Trading pairs can be updated --
+from Uniswap/Ethereum and PancakeSwap/Smartchain -- using update script (and checking in changes).
+Minimal limit values for trading pair inclusion are set in the [config file](https://github.com/trustwallet/assets/blob/master/.github/assets.config.yaml).
+There are also options for force-include and force-exclude in the config.
 
-This application was originally written by Aryan Patel ([@arypat](https://github.com/AryPat)) and Kevin Smith ([@kevinmsmith131](https://github.com/kevinmsmith131)). See [Contributing](CONTRIBUTING.md) for more information on how to get involved. 
+## Disclaimer
+
+Trust Wallet team allows anyone to submit new assets to this repository. However, this does not mean that we are in direct partnership with all of the projects.
+
+Trust Wallet team will reject projects that are deemed as scam or fraudulent after careful review.
+Trust Wallet team reserves the right to change the terms of asset submissions at any time due to changing market conditions, risk of fraud, or any other factors we deem relevant.
+
+Additionally, spam-like behavior, including but not limited to mass distribution of tokens to random addresses will result in the asset being flagged as spam and possible removal from the repository.
